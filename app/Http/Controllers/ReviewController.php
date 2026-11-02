@@ -37,7 +37,7 @@ class ReviewController extends Controller
             'content' => [
                 'required',
                 'string',
-                'min:10',
+                'min:5',
                 'max:2000',
             ],
         ]);
@@ -55,8 +55,8 @@ class ReviewController extends Controller
             ->with(
                 'success',
                 $isPrivate
-                    ? 'Catatan privat berhasil disimpan!'
-                    : 'Ulasan publik berhasil dipublikasikan!'
+                    ? 'Catatan privat berhasil disimpan ke Buku Saku Komuter Anda!'
+                    : 'Ulasan publik berhasil dibagikan ke komunitas komuter!'
             );
     }
 
@@ -68,6 +68,9 @@ class ReviewController extends Controller
             ->latest('created_at')
             ->paginate(10);
 
-        return view('reviews.my-notes', compact('notes'));
+        $totalNotes = $request->user()->privateNotes()->count();
+        $uniqueStationsCount = $request->user()->privateNotes()->distinct('station_id')->count('station_id');
+
+        return view('reviews.my-notes', compact('notes', 'totalNotes', 'uniqueStationsCount'));
     }
 }
