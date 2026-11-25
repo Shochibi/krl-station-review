@@ -15,10 +15,10 @@
         <div class="flex flex-wrap items-center gap-2 mb-4">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-600/20 text-red-400 border border-red-500/30">
                 <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                KAI COMMUTER 2026
+                DIREKTORI KOMUNITAS
             </span>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                100 Stasiun Terintegrasi
+                {{ $totalActive }} Stasiun Aktif di Direktori
             </span>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
                 Jabodetabek & Lin Yogya-Solo
@@ -30,7 +30,7 @@
                 Direktori Stasiun & Panduan Komuter <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-amber-200">KRL 2026</span>
             </h1>
             <p class="text-slate-300 text-sm sm:text-base mt-3 leading-relaxed">
-                Jelajahi seluruh stasiun di jaringan KRL Commuter Line. Temukan info fasilitas stasiun, jalur transit antarmoda (MRT, LRT, Transjakarta), tempat kuliner, hingga catatan rahasia komuter harian.
+                Jelajahi stasiun KRL dan temukan fasilitas, koneksi antarmoda, serta ulasan komuter. Data dapat belum lengkap atau berubah; konfirmasikan informasi operasional kepada operator stasiun.
             </p>
         </div>
 
@@ -99,16 +99,16 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-6 border-t border-slate-800 text-slate-300">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-red-400 font-mono-sign font-bold text-sm border border-slate-700">
-                    {{ $totalStations }}
+                    {{ $totalActive }}
                 </div>
                 <div>
-                    <div class="text-xs text-slate-400">Total Stasiun 2026</div>
-                    <div class="text-sm font-bold text-white">100% Beroperasi</div>
+                    <div class="text-xs text-slate-400">Stasiun Aktif</div>
+                    <div class="text-sm font-bold text-white">{{ $operatingPercentage }}% dari {{ $totalStations }} tercatat</div>
                 </div>
             </div>
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-blue-400 font-mono-sign font-bold text-sm border border-slate-700">
-                    7
+                    {{ $totalLines }}
                 </div>
                 <div>
                     <div class="text-xs text-slate-400">Jalur / Lin KRL</div>
@@ -126,11 +126,11 @@
             </div>
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-amber-400 font-mono-sign font-bold text-sm border border-slate-700">
-                    TOD
+                    {{ $totalReviews }}
                 </div>
                 <div>
-                    <div class="text-xs text-slate-400">Kawasan Berkelanjutan</div>
-                    <div class="text-sm font-bold text-white">Ramah Komuter</div>
+                    <div class="text-xs text-slate-400">Ulasan Komunitas</div>
+                    <div class="text-sm font-bold text-white">Pengalaman Komuter</div>
                 </div>
             </div>
         </div>
@@ -159,7 +159,7 @@
                class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 border {{ empty($selectedLine) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50' }}">
                 <span>Semua Lin</span>
                 <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ empty($selectedLine) ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-600' }}">
-                    {{ $totalStations }}
+                    {{ $totalActive }}
                 </span>
             </a>
 
@@ -359,42 +359,45 @@
                     </div>
 
                     <!-- Visual Signboard / Photo Card -->
-                    <div class="px-4 sm:px-5">
+                    <div class="px-4 sm:px-5" x-data="{ imgError: {{ $station->image_url ? 'false' : 'true' }} }">
                         @if($station->image_url)
-                            <div class="h-36 rounded-xl overflow-hidden relative border border-slate-100">
-                                <img src="{{ $station->image_url }}" alt="{{ $station->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+                            <div x-show="!imgError" class="h-36 rounded-xl overflow-hidden relative border border-slate-100 bg-slate-900">
+                                <img src="{{ $station->image_url }}"
+                                     alt="Stasiun {{ $station->name }}"
+                                     loading="lazy"
+                                     referrerpolicy="no-referrer"
+                                     x-on:error="imgError = true"
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/65 via-transparent to-transparent"></div>
                                 <div class="absolute bottom-2 left-2.5 text-white text-[11px] font-bold drop-shadow-sm flex items-center gap-1">
                                     <span class="w-2 h-2 rounded-full {{ $meta['dot'] }}"></span>
                                     {{ $station->code }} • {{ $station->name }}
                                 </div>
                             </div>
-                        @else
-                            <!-- Authentic KAI-style Platform Signboard (Papan Stasiun) -->
-                            <div class="h-32 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3.5 flex flex-col justify-between border border-slate-800 text-white relative overflow-hidden shadow-inner">
-                                <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono-sign">
-                                    <span class="flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
-                                        {{ $meta['name_short'] }}
-                                    </span>
-                                    <span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-300 font-bold border border-slate-700">
-                                        {{ $station->is_transit ? 'STASIUN TRANSIT' : 'STASIUN KOMUTER' }}
-                                    </span>
-                                </div>
-
-                                <div class="my-auto text-center">
-                                    <span class="text-xs font-mono-sign text-slate-400 tracking-widest block mb-0.5">KODE [{{ $station->code }}]</span>
-                                    <h4 class="text-lg font-extrabold tracking-wide text-white font-mono-sign uppercase truncate">
-                                        {{ $station->name }}
-                                    </h4>
-                                </div>
-
-                                <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800 pt-1.5">
-                                    <span>Jaringan KRL 2026</span>
-                                    <span>KAI Commuter</span>
-                                </div>
-                            </div>
                         @endif
+                        <div x-show="imgError" {!! $station->image_url ? 'x-cloak' : '' !!} class="h-32 rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3.5 flex flex-col justify-between border border-slate-800 text-white relative overflow-hidden shadow-inner">
+                            <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono-sign">
+                                <span class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $meta['dot'] }}"></span>
+                                    {{ $meta['name_short'] }}
+                                </span>
+                                <span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-300 font-bold border border-slate-700">
+                                    {{ $station->is_transit ? 'STASIUN TRANSIT' : 'STASIUN KOMUTER' }}
+                                </span>
+                            </div>
+
+                            <div class="my-auto text-center">
+                                <span class="text-xs font-mono-sign text-slate-400 tracking-widest block mb-0.5">KODE [{{ $station->code }}]</span>
+                                <h4 class="text-lg font-extrabold tracking-wide text-white font-mono-sign uppercase truncate">
+                                    {{ $station->name }}
+                                </h4>
+                            </div>
+
+                            <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800 pt-1.5">
+                                <span>Jaringan KRL 2026</span>
+                                <span>KAI Commuter</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Facilities Chips -->
@@ -470,7 +473,7 @@
             <div class="mt-6 flex flex-wrap justify-center gap-3">
                 <a href="{{ route('home') }}"
                    class="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
-                    Lihat Seluruh 100 Stasiun
+                    Lihat Seluruh {{ $totalActive }} Stasiun Aktif
                 </a>
             </div>
         </div>

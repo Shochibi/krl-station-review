@@ -36,7 +36,7 @@
                     Jaringan KRL 2026 Normal
                 </span>
                 <span class="hidden md:inline text-slate-400">•</span>
-                <span class="hidden md:inline text-slate-400">100 Stasiun Aktif Jabodetabek & Yogya-Solo</span>
+                <span class="hidden md:inline text-slate-400">Direktori Jabodetabek &amp; Yogya-Solo</span>
             </div>
             <div class="flex items-center gap-4 text-[11px] sm:text-xs text-slate-400 font-medium">
                 <span class="hidden lg:flex items-center gap-1.5">
@@ -52,11 +52,11 @@
     </div>
 
     <!-- Main Navigation Header -->
-    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
+    <header x-data="{ mobileMenuOpen: false }" class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
             
             <!-- Logo & Brand Identity -->
-            <a href="{{ route('home') }}" class="group flex items-center gap-3">
+            <a href="{{ route('home') }}" class="group flex items-center gap-3 shrink-0">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 via-red-600 to-rose-700 flex items-center justify-center text-white shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="4" y="3" width="16" height="16" rx="3" />
@@ -92,21 +92,27 @@
                         </svg>
                         Buku Saku Komuter
                     </a>
+                    <a href="{{ route('dashboard') }}"
+                       class="px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors {{ request()->routeIs('dashboard') ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                        Dashboard
+                    </a>
                 @endauth
             </nav>
 
             <!-- User Auth Profile & Actions -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
                 @auth
-                    <div class="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5">
-                        <div class="w-7 h-7 rounded-lg bg-red-600 text-white font-bold text-xs flex items-center justify-center uppercase">
-                            {{ substr(auth()->user()->name, 0, 1) }}
-                        </div>
-                        <div class="hidden sm:block text-left">
-                            <span class="block text-xs font-bold text-slate-900 truncate max-w-[120px]">{{ auth()->user()->name }}</span>
-                            <span class="block text-[10px] text-slate-500 font-medium">Anak Kereta</span>
-                        </div>
-                        <form action="{{ route('logout') }}" method="POST" class="ml-1">
+                    <div class="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5">
+                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 hover:opacity-80 transition-opacity" title="Pengaturan Profil">
+                            <div class="w-7 h-7 rounded-lg bg-red-600 text-white font-bold text-xs flex items-center justify-center uppercase">
+                                {{ mb_substr(auth()->user()->name, 0, 1) }}
+                            </div>
+                            <div class="text-left">
+                                <span class="block text-xs font-bold text-slate-900 truncate max-w-[120px]">{{ auth()->user()->name }}</span>
+                                <span class="block text-[10px] text-slate-500 font-medium">Profil &amp; Akun</span>
+                            </div>
+                        </a>
+                        <form action="{{ route('logout') }}" method="POST" class="ml-1 border-l border-slate-200 pl-2">
                             @csrf
                             <button type="submit" 
                                     class="text-xs font-semibold text-slate-500 hover:text-red-600 p-1 hover:bg-red-50 rounded-md transition-colors"
@@ -118,23 +124,91 @@
                         </form>
                     </div>
                 @else
-                    <a href="{{ route('login') }}"
-                       class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
-                        Masuk
-                    </a>
-                    <a href="{{ route('register') }}"
-                       class="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-xl shadow-xs shadow-red-500/20 transition-all">
-                        Daftar
-                    </a>
+                    <div class="hidden md:flex items-center gap-2">
+                        <a href="{{ route('login') }}"
+                           class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                            Masuk
+                        </a>
+                        <a href="{{ route('register') }}"
+                           class="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-xl shadow-xs shadow-red-500/20 transition-all">
+                            Daftar
+                        </a>
+                    </div>
                 @endauth
+
+                <!-- Mobile Menu Toggle -->
+                <button type="button"
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                        :aria-expanded="mobileMenuOpen.toString()"
+                        aria-label="Buka menu navigasi"
+                        class="md:hidden inline-flex items-center justify-center p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors">
+                    <svg x-show="!mobileMenuOpen" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                    <svg x-show="mobileMenuOpen" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
 
         </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div x-show="mobileMenuOpen" x-transition x-cloak class="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1.5">
+            <a href="{{ route('home') }}"
+               class="block px-3 py-2 rounded-xl text-sm font-semibold {{ request()->routeIs('home') ? 'bg-red-50 text-red-700' : 'text-slate-700 hover:bg-slate-100' }}">
+                Semua Stasiun
+            </a>
+
+            @auth
+                <a href="{{ route('reviews.my-notes') }}"
+                   class="block px-3 py-2 rounded-xl text-sm font-semibold {{ request()->routeIs('reviews.my-notes') ? 'bg-amber-50 text-amber-900' : 'text-slate-700 hover:bg-slate-100' }}">
+                    🔒 Buku Saku Komuter
+                </a>
+                <a href="{{ route('dashboard') }}"
+                   class="block px-3 py-2 rounded-xl text-sm font-semibold {{ request()->routeIs('dashboard') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100' }}">
+                    Dashboard
+                </a>
+                <a href="{{ route('profile.edit') }}"
+                   class="block px-3 py-2 rounded-xl text-sm font-semibold {{ request()->routeIs('profile.edit') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100' }}">
+                    Profil Akun ({{ auth()->user()->name }})
+                </a>
+                <form action="{{ route('logout') }}" method="POST" class="pt-1 border-t border-slate-100">
+                    @csrf
+                    <button type="submit" class="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50">
+                        Keluar Akun
+                    </button>
+                </form>
+            @else
+                <div class="pt-2 border-t border-slate-100 flex gap-2">
+                    <a href="{{ route('login') }}"
+                       class="flex-1 text-center px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">
+                        Masuk
+                    </a>
+                    <a href="{{ route('register') }}"
+                       class="flex-1 text-center px-3 py-2 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700">
+                        Daftar
+                    </a>
+                </div>
+            @endauth
+        </div>
     </header>
+
+    @isset($header)
+        <div class="bg-white border-b border-slate-200/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                {{ $header }}
+            </div>
+        </div>
+    @endisset
 
     <!-- Main Content -->
     <main class="flex-grow">
-        @yield('content')
+        @hasSection('content')
+            @yield('content')
+        @else
+            {{ $slot ?? '' }}
+        @endif
     </main>
 
     <!-- Authentic Transit Footer -->

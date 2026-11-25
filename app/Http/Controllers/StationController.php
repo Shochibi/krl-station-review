@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Review;
 use App\Models\Station;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class StationController extends Controller
 
         // Query Stasiun
         $query = Station::query()
+            ->where('is_active', true)
             ->withAvg('publicReviews', 'rating')
             ->withCount('publicReviews');
 
@@ -44,7 +46,11 @@ class StationController extends Controller
 
         // Sorting
         match ($sort) {
-            'rating' => $query->orderByDesc('public_reviews_avg_rating')->orderBy('name'),
+            'rating' => $query->orderByDesc(
+                Review::selectRaw('COALESCE(AVG(rating), 0)')
+                    ->whereColumn('station_id', 'stations.id')
+                    ->where('is_private', false)
+            )->orderBy('name'),
             'reviews' => $query->orderByDesc('public_reviews_count')->orderBy('name'),
             default => $query->orderBy('name'),
         };
@@ -53,14 +59,23 @@ class StationController extends Controller
 
         // Line counts for quick filter tabs
         $lineCounts = Station::query()
+            ->where('is_active', true)
             ->select('line_name', DB::raw('count(*) as total'))
             ->groupBy('line_name')
             ->pluck('total', 'line_name');
 
-        // Total summary stats
+        // Total summary stats (calculated dynamically from database)
         $totalStations = Station::count();
-        $totalTransit = Station::where('is_transit', true)->count();
-        $allCities = Station::select('city')->distinct()->orderBy('city')->pluck('city');
+        $totalActive = Station::where('is_active', true)->count();
+        $totalTransit = Station::where('is_active', true)->where('is_transit', true)->count();
+        $totalLines = Station::where('is_active', true)->distinct('line_name')->count('line_name');
+        $totalReviews = Review::where('is_private', false)->count();
+        $operatingPercentage = $totalStations > 0 ? round(($totalActive / $totalStations) * 100) : 0;
+        $allCities = Station::where('is_active', true)
+            ->select('city')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
 
         return view('stations.index', compact(
             'stations',
@@ -71,24 +86,42 @@ class StationController extends Controller
             'sort',
             'lineCounts',
             'totalStations',
+            'totalActive',
             'totalTransit',
+            'totalLines',
+            'totalReviews',
+            'operatingPercentage',
             'allCities'
         ));
     }
 
-    public function show(Station $station)
+    public function show(Request $request, Station $station)
     {
+        abort_unless($station->is_active, 404);
+
+        $selectedCategory = $request->query('category');
+        $allowedCategories = ReviewController::CATEGORIES;
+        if ($selectedCategory && ! in_array($selectedCategory, $allowedCategories, true)) {
+            $selectedCategory = null;
+        }
+
         $station->loadAvg('publicReviews', 'rating')
             ->loadCount('publicReviews');
 
-        // Review publik dengan pagination
-        $reviews = $station->publicReviews()
+        // Review publik dengan filter kategori & pagination
+        $reviewsQuery = $station->publicReviews()
             ->with('user')
-            ->latest('created_at')
-            ->paginate(10);
+            ->latest('created_at');
+
+        if ($selectedCategory) {
+            $reviewsQuery->where('category', $selectedCategory);
+        }
+
+        $reviews = $reviewsQuery->paginate(10)->withQueryString();
 
         // Rating breakdown per bintang (1-5)
         $ratingCounts = $station->publicReviews()
+            ->whereNotNull('rating')
             ->select('rating', DB::raw('count(*) as count'))
             ->groupBy('rating')
             ->pluck('count', 'rating');
@@ -105,6 +138,7 @@ class StationController extends Controller
 
         // Stasiun lain di lin yang sama untuk navigasi cepat
         $sameLineStations = Station::where('line_name', $station->line_name)
+            ->where('is_active', true)
             ->where('id', '!=', $station->id)
             ->orderBy('name')
             ->take(6)
@@ -115,7 +149,9 @@ class StationController extends Controller
             'reviews',
             'myPrivateNotes',
             'ratingCounts',
-            'sameLineStations'
+            'sameLineStations',
+            'selectedCategory',
+            'allowedCategories'
         ));
     }
 }

@@ -68,7 +68,10 @@
         <!-- Hero Content / Image -->
         @if($station->image_url)
             <div class="h-64 sm:h-80 relative overflow-hidden bg-slate-900">
-                <img src="{{ $station->image_url }}" alt="{{ $station->name }}" class="w-full h-full object-cover">
+                <img src="{{ $station->image_url }}"
+                     alt="Stasiun {{ $station->name }}"
+                     referrerpolicy="no-referrer"
+                     class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
                 
                 <div class="absolute bottom-6 left-6 right-6 text-white flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -148,7 +151,7 @@
                             </svg>
                             <span>{{ $station->city }}</span>
                             <span class="text-slate-600">•</span>
-                            <span>Wilayah Operasional KAI Commuter 2026</span>
+                            <span>Direktori komunitas</span>
                         </p>
                     </div>
 
@@ -165,7 +168,7 @@
             </div>
         @endif
 
-        <!-- Description & Verified Facilities Grid -->
+        <!-- Description & Station Information -->
         <div class="p-6 sm:p-8">
             
             @if($station->description)
@@ -181,35 +184,63 @@
                 <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Fasilitas & Kelengkapan Stasiun 2026
+                Fasilitas yang Tercatat
             </h3>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                @php
-                    $facList = $station->facilities ?? [
-                        'Toilet Bersih', 'Musholla', 'Tap Gate Elektronik', 'Pos Kesehatan', 'CCTV 24 Jam'
-                    ];
-                @endphp
-
-                @foreach($facList as $facility)
+                @forelse($station->facilities ?? [] as $facility)
                     <div class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-800">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                         <span class="truncate">{{ $facility }}</span>
                     </div>
-                @endforeach
+                @empty
+                    <p class="col-span-full text-xs text-slate-500">
+                        Informasi fasilitas belum tersedia. Silakan verifikasi langsung di stasiun.
+                    </p>
+                @endforelse
             </div>
 
-            <!-- Jam Operasional & Layanan -->
-            <div class="mt-6 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
-                <div class="flex items-center gap-2">
-                    <span class="font-bold text-slate-700">Jam Operasional:</span>
-                    <span>04:00 - 24:00 WIB (Setiap Hari)</span>
+            @if($station->accessibility)
+                <div class="mt-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Aksesibilitas</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($station->accessibility as $item)
+                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 border border-blue-100 text-xs font-semibold">
+                                {{ $item }}
+                            </span>
+                        @endforeach
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="font-bold text-slate-700">Kartu Pembayaran:</span>
-                    <span>KMT, Kartu Uang Elektronik Bank (Flazz, TapCash, e-Money, Brizzi), QRIS GoTransit</span>
+            @endif
+
+            @if($station->transit_connections)
+                <div class="mt-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Koneksi Antarmoda</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($station->transit_connections as $connection)
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100 text-xs font-semibold">
+                                {{ $connection }}
+                            </span>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
+            @endif
+
+            @if($station->latitude !== null && $station->longitude !== null)
+                <div class="mt-6 pt-6 border-t border-slate-100">
+                    <a href="https://www.openstreetmap.org/?mlat={{ $station->latitude }}&mlon={{ $station->longitude }}#map=16/{{ $station->latitude }}/{{ $station->longitude }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inline-flex items-center gap-2 text-xs font-bold text-blue-700 hover:text-blue-900">
+                        <span>Lihat lokasi di OpenStreetMap</span>
+                        <span aria-hidden="true">↗</span>
+                    </a>
+                </div>
+            @endif
+
+            <p class="mt-6 pt-4 border-t border-slate-100 text-[11px] leading-relaxed text-slate-500">
+                Informasi fasilitas dan akses dapat berubah. Konfirmasikan kondisi terkini kepada operator stasiun.
+            </p>
 
         </div>
 
@@ -238,7 +269,7 @@
                 </div>
 
                 @auth
-                    <form action="{{ route('reviews.store', $station) }}" method="POST" class="space-y-4" x-data="{ isPrivate: false, rating: '5' }">
+                    <form action="{{ route('reviews.store', $station) }}" method="POST" class="space-y-4" x-data="{ isPrivate: {{ old('is_private') ? 'true' : 'false' }}, rating: '{{ old('rating', '5') }}' }">
                         @csrf
 
                         <!-- Privacy Toggle Segmented Switch -->
@@ -276,8 +307,8 @@
                             </p>
                         </div>
 
-                        <!-- Rating Picker -->
-                        <div>
+                        <!-- Rating Picker (Only for Public Reviews) -->
+                        <div x-show="!isPrivate" x-transition>
                             <div class="flex items-center justify-between mb-1.5">
                                 <label class="text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Beri Rating Stasiun
@@ -288,7 +319,7 @@
                             <div class="flex items-center gap-2">
                                 @for($i = 1; $i <= 5; $i++)
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="rating" value="{{ $i }}" class="sr-only" x-model="rating">
+                                        <input type="radio" name="rating" value="{{ $i }}" class="sr-only" x-model="rating" :disabled="isPrivate">
                                         <span class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border transition-all"
                                               :class="rating >= {{ $i }} ? 'bg-amber-50 border-amber-300 text-amber-500' : 'bg-slate-50 border-slate-200 text-slate-300'">
                                             ★
@@ -425,6 +456,9 @@
                                         </span>
                                         <span class="text-slate-400 text-[11px]">
                                             {{ $note->created_at->format('d M Y, H:i') }}
+                                            @if($note->updated_at && $note->updated_at->gt($note->created_at))
+                                                <span class="text-amber-700 font-semibold">(diedit)</span>
+                                            @endif
                                         </span>
                                     </div>
                                     @if($note->rating)
@@ -435,6 +469,18 @@
                                     <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">
                                         {{ $note->content }}
                                     </p>
+                                    <div class="mt-3 flex items-center gap-3 border-t border-amber-100 pt-3">
+                                        <a href="{{ route('reviews.edit', $note) }}"
+                                           class="text-xs font-bold text-blue-700 hover:text-blue-900">Edit catatan</a>
+                                        <form action="{{ route('reviews.destroy', $note) }}" method="POST"
+                                              onsubmit="return confirm('Hapus catatan pribadi ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs font-bold text-red-600 hover:text-red-800">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -445,7 +491,7 @@
             <!-- Public Reviews Section -->
             <section>
                 
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center justify-between mb-5">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
                             <span>💬 Ulasan Komunitas</span>
@@ -468,6 +514,39 @@
                     @endif
                 </div>
 
+                @if($station->public_reviews_count > 0)
+                    <!-- Rating Breakdown Card -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-5 shadow-2xs space-y-1.5">
+                        @for($star = 5; $star >= 1; $star--)
+                            @php
+                                $count = (int) ($ratingCounts[$star] ?? 0);
+                                $pct = $station->public_reviews_count > 0 ? round(($count / $station->public_reviews_count) * 100) : 0;
+                            @endphp
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="w-10 font-bold text-slate-700 font-mono-sign shrink-0">{{ $star }} ★</span>
+                                <div class="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full rounded-full bg-amber-400" style="width: {{ $pct }}%"></div>
+                                </div>
+                                <span class="w-8 text-right text-slate-500 font-mono-sign shrink-0">{{ $count }}</span>
+                            </div>
+                        @endfor
+                    </div>
+                @endif
+
+                <!-- Category Filter Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-5">
+                    <a href="{{ route('stations.show', $station) }}"
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition-colors {{ empty($selectedCategory) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }}">
+                        Semua Kategori
+                    </a>
+                    @foreach($allowedCategories as $cat)
+                        <a href="{{ route('stations.show', ['station' => $station, 'category' => $cat]) }}"
+                           class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition-colors {{ $selectedCategory === $cat ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }}">
+                            {{ $cat }}
+                        </a>
+                    @endforeach
+                </div>
+
                 <!-- Reviews Feed -->
                 <div class="space-y-4">
                     @forelse($reviews as $review)
@@ -478,7 +557,7 @@
                                 
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center uppercase shrink-0">
-                                        {{ substr($review->user->name, 0, 1) }}
+                                        {{ mb_substr($review->user->name, 0, 1) }}
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2">
@@ -489,6 +568,9 @@
                                         </div>
                                         <span class="text-[11px] text-slate-400">
                                             {{ $review->created_at->format('d M Y, H:i') }} WIB
+                                            @if($review->updated_at && $review->updated_at->gt($review->created_at))
+                                                <span class="text-slate-500 font-medium">(diedit)</span>
+                                            @endif
                                         </span>
                                     </div>
                                 </div>
@@ -514,6 +596,27 @@
                             <div class="mt-3 text-xs text-slate-700 leading-relaxed whitespace-pre-line">
                                 {{ $review->content }}
                             </div>
+
+                            @auth
+                                @if(auth()->user()->can('update', $review) || auth()->user()->can('delete', $review))
+                                    <div class="mt-4 flex items-center gap-3 border-t border-slate-100 pt-3">
+                                        @can('update', $review)
+                                            <a href="{{ route('reviews.edit', $review) }}"
+                                               class="text-xs font-bold text-blue-700 hover:text-blue-900">Edit ulasan</a>
+                                        @endcan
+                                        @can('delete', $review)
+                                            <form action="{{ route('reviews.destroy', $review) }}" method="POST"
+                                                  onsubmit="return confirm('Hapus ulasan ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-xs font-bold text-red-600 hover:text-red-800">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
+                                @endif
+                            @endauth
 
                         </article>
                     @empty

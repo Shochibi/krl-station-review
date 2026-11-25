@@ -1,17 +1,21 @@
 # KRL Station Review & Notes (2026 Edition)
 
-Aplikasi web berbasis **Laravel 11**, **MySQL**, dan **Tailwind CSS** untuk direktori stasiun KRL Commuter Line terlengkap tahun 2026, ulasan komunitas anak kereta (anker), dan buku saku catatan pribadi (*private notes*).
+Aplikasi web berbasis **Laravel 12**, **PHP 8.2+**, dan **Tailwind CSS** untuk direktori stasiun KRL Commuter Line, ulasan komunitas, dan buku saku catatan pribadi (*private notes*).
 
 ---
 
 ## Fitur Utama
 
-- **100 Stasiun KRL Terintegrasi (2026)**: Mencakup seluruh lin operasional aktif di Jabodetabek (Lin Bogor, Lin Cikarang, Lin Rangkasbitung, Lin Tangerang, Lin Tanjung Priok, Lin Bandara Soetta) dan Lin Yogyakarta-Solo.
+- **Direktori Stasiun**: Seeder menyediakan data awal lintas Jabodetabek dan Yogyakarta-Solo; jumlah dan status aktif dihitung dari database.
 - **Desain Otentik Komuter & Wayfinding Transit**: Mengadopsi visual signage papan stasiun KAI, kode singkatan stasiun resmi (MRI, THB, BOO, BKS, dsb.), dan palet warna resmi tiap lin.
 - **Filter Jalur Interaktif**: Filter cepat per Lin KRL (dengan badge counter stasiun aktif), filter per kota/wilayah, dan opsi khusus stasiun transit antarmoda (MRT, LRT, Transjakarta).
 - **Ulasan Publik Komunitas**: Rating 1-5 bintang, kategori ulasan (Fasilitas, Keramaian & Jam Padat, Kuliner & Kopi, Tips Transit & Posisi Gerbong, Kebersihan, Keamanan).
+- **Kelola Ulasan**: Penulis dapat mengedit atau menghapus ulasan/catatannya sendiri; admin dapat menghapus konten sesuai policy.
 - **Buku Saku Komuter (Catatan Privat)**: Simpan tips posisi pintu gerbong, rekomendasi tempat parkir, dan catatan rahasia yang hanya bisa diakses oleh akun Anda.
+- **Info Akses Stasiun**: Detail fasilitas, aksesibilitas, koneksi antarmoda, dan tautan OpenStreetMap ditampilkan jika datanya tersedia.
 - **Autentikasi & Responsif**: Manajemen akun (Breeze), UI mobile-first untuk kenyamanan komuter saat bepergian.
+
+> Data awal belum dilengkapi sumber/verifikasi per stasiun. Fasilitas, aksesibilitas, dan koneksi dapat kosong atau tidak terkini; konfirmasikan informasi operasional kepada operator stasiun.
 
 ---
 

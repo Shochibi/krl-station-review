@@ -12,16 +12,45 @@ class Station extends Model
         'code',
         'line_name',
         'city',
+        'latitude',
+        'longitude',
         'is_transit',
+        'is_active',
         'facilities',
+        'accessibility',
+        'transit_connections',
         'description',
         'image_url',
     ];
 
     protected $casts = [
         'is_transit' => 'boolean',
+        'is_active' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'facilities' => 'array',
+        'accessibility' => 'array',
+        'transit_connections' => 'array',
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function hasCoordinates(): bool
+    {
+        return !is_null($this->latitude) && !is_null($this->longitude);
+    }
+
+    public function getMapsUrlAttribute(): ?string
+    {
+        if (!$this->hasCoordinates()) {
+            return null;
+        }
+
+        return "https://www.google.com/maps/search/?api=1&query={$this->latitude},{$this->longitude}";
+    }
 
     public function reviews(): HasMany
     {
